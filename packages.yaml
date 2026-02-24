@@ -9,3 +9,4 @@ dependencies:
   - pip:
       - snowflake-connector-python
       - python-dotenv
+      - snowflake-ingest
