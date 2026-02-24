@@ -10,3 +10,4 @@ dependencies:
       - snowflake-connector-python
       - python-dotenv
       - snowflake-ingest
+      - snowflake-snowpark-python
