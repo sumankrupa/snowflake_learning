@@ -48,4 +48,24 @@ list @s3_snowpark_stage;
 
 truncate table employees;
 
-select * from employees;
+USE MYDB;
+use role accountadmin;
+use schema myschema;
+select * from customer;
+
+
+CREATE or replace TABLE MYSCHEMA.ORDERS (
+    ORDER_ID INT,
+    CUSTOMER_ID INT,
+    AMOUNT FLOAT,
+    STATUS STRING
+);
+
+INSERT INTO MYSCHEMA.ORDERS (ORDER_ID, CUSTOMER_ID, AMOUNT, STATUS) VALUES
+(101, 1, 150.00, 'PLACED'),
+(102, 2, 200.50, 'SHIPPED'),
+(103, 3, 99.99, 'DELIVERED'),
+(104, 4, 300.00, 'PLACED'),
+(105, 5, 450.75, 'SHIPPED');
+
+

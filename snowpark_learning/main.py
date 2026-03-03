@@ -91,3 +91,93 @@ session.sproc.register(
 
 result = session.call('my_first_sproc')
 print(f'Result: {result}')
+
+
+# 9. window functions
+
+from snowflake.snowpark import Window
+import snowflake.snowpark.functions as f
+
+
+window_spec = Window.partition_by().order_by(f.col('age').desc())
+df.show()
+df.with_column('row_num',f.row_number().over(window_spec))\
+    .with_column('rank',f.rank().over(window_spec))\
+    .with_column('dense_rank',f.dense_rank().over(window_spec)).show()
+
+df.with_column('running_age_sum',f.sum('age').over(window_spec))\
+    .with_column('prev_age',f.lag('age',1).over(window_spec))\
+    .with_column('next_age',f.lead('age',1).over(window_spec)).show()
+
+
+# 10.vectorized udf
+
+# normal age(0 to 1)
+import pandas as pd
+from snowflake.snowpark.functions import pandas_udf
+
+@pandas_udf(return_type = t.FloatType(),input_types = [t.FloatType()])
+def double_age(age:pd.Series) -> pd.Series:
+    return age*2
+df.with_column('double_Age',double_age(f.col('age'))).show()
+
+
+# ex1. normalize age
+
+@pandas_udf(return_type = t.FloatType(),input_types = [t.FloatType()])
+def normalize(age:pd.Series) -> pd.Series:
+    return (age - age.min() )/ (age.max()  - age.min())
+
+# ex2. clean a string
+
+@pandas_udf(return_type = t.StringType(),input_types = [t.StringType()])
+def clean_String(s :pd.Series) ->pd.Series:
+    return s.str.strip().str.title()
+
+df.with_column('clean_name',clean_String(f.col('name'))).show()
+
+
+# ex3. age category
+@pandas_udf(return_type = t.StringType(),input_types = [t.FloatType()])
+def age_category(age:pd.Series) -> pd.Series:
+    bins = [0,35,55,100]
+    labels = ['young','mid','old']
+    return pd.cut(age,bins = bins ,labels=labels, right = False).astype(str)
+
+df.with_column('category',age_category(f.col('age'))).show()
+
+# 11.null
+
+
+
+
+# 12. null and condition when when otherwise
+df_case = df.with_column(
+    'age_band',
+    f.when(f.col('age').is_null(),f.lit('unknown'))
+    .when(f.col('age') < 35,f.lit('kid'))
+    .when((f.col('age') >= 35) & (f.col('age') < 55),f.lit('unc'))
+    .otherwise(f.lit('zoom'))
+)
+
+df_case =df_case.with_column(
+    'state_clean',
+    f.when(f.col('state').is_null,f.lit('unkown'))
+    .otherwise(f.trim(f.col('state')))
+)
+df_case.select("id", "age", "AGE_BAND").show()
+
+
+
+customer_df = session.table('MYSCHEMA.CUSTOMER')
+
+order_df = session.table('MYSCHEMA.orders')
+
+
+orders_update_df = session.create_dataframe(
+    [
+        (102,2,210.50,'DELIVERED'),(105,5,460.63,'DELIVERED'),(106,1,80.01,'PLACED')
+    ],
+    schema=['ORDER_ID','CUSTOMER_ID','AMOUNT','STATUS']
+)
+orders_update_df
