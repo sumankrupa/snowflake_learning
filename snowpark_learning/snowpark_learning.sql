@@ -69,3 +69,8 @@ INSERT INTO MYSCHEMA.ORDERS (ORDER_ID, CUSTOMER_ID, AMOUNT, STATUS) VALUES
 (105, 5, 450.75, 'SHIPPED');
 
 
+
+select * from orders;
+CREATE OR REPLACE VIEW mydb.myschema.orders_view AS
+SELECT * FROM mydb.myschema.orders WHERE status = 'PLACED';
+
